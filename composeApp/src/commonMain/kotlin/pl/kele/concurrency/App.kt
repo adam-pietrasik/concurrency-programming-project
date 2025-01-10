@@ -121,17 +121,17 @@ fun App(
                         },
                         "File transfer size [MB/s]"
                     )
-                    TextField(
-                        value = numberOfUsersToAdd,
-                        onValueChange = { value ->
-                            if (value.text.all(Char::isDigit))
-                                numberOfUsersToAdd = value
-                        },
-                        label = { Text("Number of users to add") },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                        )
-                    )
+//                    TextField(
+//                        value = numberOfUsersToAdd,
+//                        onValueChange = { value ->
+//                            if (value.text.all(Char::isDigit))
+//                                numberOfUsersToAdd = value
+//                        },
+//                        label = { Text("Number of users to add") },
+//                        keyboardOptions = KeyboardOptions(
+//                            keyboardType = KeyboardType.Number,
+//                        )
+//                    )
                 }
 
             }
