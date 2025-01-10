@@ -1,0 +1,9 @@
+package pl.kele.concurrency
+
+class Greeting {
+    private val platform = getPlatform()
+
+    fun greet(): String {
+        return "Hello, ${platform.name}!"
+    }
+}
