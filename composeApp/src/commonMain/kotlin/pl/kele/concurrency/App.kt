@@ -1,44 +1,31 @@
 package pl.kele.concurrency
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.RangeSlider
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.consumeAsFlow
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import pl.kele.concurrency.model.UserData
 import pl.kele.concurrency.viewmodel.FileTransferViewModel
 import pl.kele.concurrency.viewmodel.UserDataViewModel
+import sun.tools.jconsole.LabeledComponent.layout
 import kotlin.random.Random
 
 const val fileSizeRangeStart = 10L
@@ -79,7 +66,7 @@ fun App(
                     .fillMaxSize()
             ) {
 
-                Column (
+                Column(
                     modifier = Modifier
                         .weight(0.7f)
                         .fillMaxSize()
@@ -176,7 +163,7 @@ fun App(
                     Row {
                         Button(
                             onClick = {
-                                for (i in 0 ..< numberOfUsersToAdd.text.toInt()) {
+                                for (i in 0..<numberOfUsersToAdd.text.toInt()) {
                                     fileSize = Random.nextLong(fileSizeRange.first, fileSizeRange.last + 1)
                                     userDataViewModel.addUser(fileSize)
                                     if (isSimulationRunning.value)
@@ -202,10 +189,7 @@ fun App(
                 AddedContent(usersList = usersList.value)
 
             }
-
-
         }
-
     }
 }
 
@@ -232,16 +216,34 @@ fun AddedContent(
         }
         items(usersList) { user ->
             Row(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("${user.id}")
-                Text(user.userName)
-                Text("${user.fileSize}")
-                Text("${user.entryTime}")
-                Text("${user.timeInQueue}")
-                Text("${user.priority}")
+                Text(
+                    "${user.id}",
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .border(1.dp, Color.Black)
+                )
+                Text(user.userName,
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .border(1.dp, Color.Black)
+                )
+                Text("${user.fileSize}",
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .border(1.dp, Color.Black)
+                )
+                Text(Utility.convertDate(user.entryTime, "dd-MM-yyyy HH:mm:ss"),
+                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black))
+                Text("${user.timeInQueue}",
+                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black))
+                Text("${user.priority}",
+                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black))
             }
         }
     }
