@@ -67,15 +67,14 @@ fun App(
                         .fillMaxSize()
                         .background(Color.Gray)
                 ) {
-                    LazyRow {
+                    LazyRow(modifier = Modifier.padding(10.dp)) {
                         items(disksList.value) { disk ->
                             Column {
                                 Text("Disk ${disk.id}")
-                                Text("Current user data: ${disk.currentUser?.id} ${disk.currentFileSize}")
-                                Text("Data transfer progress = ${disk.transferredFileSize}")
-                                Text("Is data transfer in progress = ${disk.isBusy}")
+                                Text("User ID: ${disk.currentUser?.id} User file size: ${disk.currentFileSize}")
+                                Text("Data transfer progress: ${disk.transferredFileSize}")
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
                         }
                     }
 
@@ -231,11 +230,6 @@ fun AddedContent(
                         .weight(0.2f)
                         .border(1.dp, Color.Black)
                         .padding(start = 6.dp, bottom = 2.dp))
-                Text("FILE TRANSFER",
-                    modifier = Modifier
-                        .weight(0.2f)
-                        .border(1.dp, Color.Black)
-                        .padding(start = 6.dp, bottom = 2.dp))
             }
         }
         items(usersList) { user ->
@@ -263,9 +257,6 @@ fun AddedContent(
                     modifier = Modifier.weight(0.2f).border(1.dp, Color.Black)
                         .padding(start = 6.dp, bottom = 2.dp))
                 Text("${user.priority}",
-                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black)
-                        .padding(start = 6.dp, bottom = 2.dp))
-                Text("${user.isFileUploading}",
                     modifier = Modifier.weight(0.2f).border(1.dp, Color.Black)
                         .padding(start = 6.dp, bottom = 2.dp))
             }
@@ -330,81 +321,3 @@ fun LongRangeSlider(
     )
 
 }
-
-//@Composable
-//fun Table(
-//    modifier: Modifier = Modifier,
-//    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally
-//) {
-//
-//    Column(
-//        modifier = modifier,
-//        horizontalAlignment = horizontalAlignment
-//    ) {
-//
-//        TableHeaderRow()
-//        TableRow(
-//            userData = UserData(1, "Test", 50.0, 1, System.currentTimeMillis(), 1.0)
-//        )
-//        TableRow(
-//            userData = UserData(1, "Test", 50.0, 1, System.currentTimeMillis(), 1.0)
-//        )
-//        TableRow(
-//            userData = UserData(1, "Test", 50.0, 1, System.currentTimeMillis(), 1.0)
-//        )
-//    }
-//
-//}
-//
-//@Composable
-//fun TableHeaderRow(modifier: Modifier = Modifier) {
-//
-//    val headerList = listOf("Id", "User", "File size", "Time in queue", "Entry time", "Priority")
-//    Row {
-//        for (header in headerList) {
-//            TableCell(cellData = header)
-//        }
-//    }
-//
-//}
-//
-//@Composable
-//fun TableRow(
-//    modifier: Modifier = Modifier,
-//    userData: UserData
-//) {
-//
-//    Row(
-//        modifier = modifier
-//    ) {
-//        TableCell(cellData = "${userData.id}")
-//        TableCell(cellData = userData.userName)
-//        TableCell(cellData = "${userData.fileSize}")
-//        TableCell(cellData = "${userData.timeInQueue}")
-//        TableCell(cellData = "${userData.entryTime}")
-//        TableCell(cellData = "${userData.priority}")
-//    }
-//
-//}
-//
-//@Composable
-//fun TableCell (
-//    modifier: Modifier = Modifier
-//        .width(100.dp)
-//        .border(1.dp, Color.Black),
-//    cellData: String
-//) {
-//
-//    Text(
-//        modifier = modifier,
-//        text = cellData
-//    )
-//
-//}
-//
-
-
-
-
-
-

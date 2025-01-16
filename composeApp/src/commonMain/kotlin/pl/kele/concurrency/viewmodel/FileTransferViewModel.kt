@@ -42,7 +42,7 @@ class FileTransferViewModel : ViewModel() {
                     val nextUser = users.firstOrNull { user ->
                         !user.isFileUploading
                     }
-                    delay(1000)
+                    delay(500)
                     if (nextUser != null) {
                         val userToDel = nextUser.copy(isFileUploading = true)
                         nextUser.isFileUploading = true
