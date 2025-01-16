@@ -1,12 +1,10 @@
 package pl.kele.concurrency.model
 
-import kotlin.math.abs
 import kotlin.math.log
 
 data class UserData(
-    var id: Int,
-    var userName: String,
-    var fileSize: Long,
+    var id: Int = ++index,
+    var fileSize: List<Long>,
     var timeInQueue: Long,
     var entryTime: Long,
     var priority: Double,
@@ -31,9 +29,13 @@ data class UserData(
 
     fun updatePriority(queueSize: Int): Double {
 //        priority = log(timeInQueue.toDouble(), abs(fileSize.toDouble() - timeInQueue)) + (queueSize + 1.0).div(fileSize * timeInQueue) // Variant III
-        priority = log(timeInQueue.toDouble(), fileSize.toDouble()) + (queueSize + 1.0).div(fileSize) // Variant II
+        priority = log(timeInQueue.toDouble(), fileSize[0].toDouble()) + (queueSize + 1.0).div(fileSize[0]) // Variant II
 //        priority = log(timeInQueue.toDouble(), queueSize + 1.0) + (queueSize + 1.0).div(fileSize) // Variant I
         return priority
+    }
+
+    companion object {
+        var index = 0
     }
 
 }

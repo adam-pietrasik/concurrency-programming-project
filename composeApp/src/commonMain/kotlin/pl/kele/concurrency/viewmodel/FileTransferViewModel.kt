@@ -29,7 +29,8 @@ class FileTransferViewModel : ViewModel() {
     fun startFileTransfer(
         usersFlow: StateFlow<List<UserData>>,
         transferSizeRange: LongRange,
-        userDataAction: (UserData) -> Unit
+        userDataAction: (UserData?) -> Unit,
+        updateUserDataAction: (UserData) -> Unit
     ) {
         if (mIsFileTransferRunning.value)
             return
@@ -38,8 +39,15 @@ class FileTransferViewModel : ViewModel() {
 
             usersFlow.collect { users ->
                 if (users.isNotEmpty()) {
-                    val nextUser = users.first { user -> !user.isFileUploading }
+                    val nextUser = users.firstOrNull { user ->
+                        !user.isFileUploading
+                    }
                     delay(1000)
+                    if (nextUser != null) {
+                        val userToDel = nextUser.copy(isFileUploading = true)
+                        nextUser.isFileUploading = true
+                        userDataAction(userToDel)
+                    }
                         viewModelScope.launch {
                             semaphores.acquire()
                             fileTransfer(
@@ -49,7 +57,7 @@ class FileTransferViewModel : ViewModel() {
                                     transferSizeRange.first,
                                     transferSizeRange.last + 1
                                 ),
-                                userDataAction = userDataAction
+                                updateUserDataAction = updateUserDataAction
                             )
                         }
                 }
@@ -60,29 +68,32 @@ class FileTransferViewModel : ViewModel() {
 
     private suspend fun fileTransfer(
         disk: Disk?,
-        user: UserData,
+        user: UserData?,
         transferSpeedMbPerSecond: Long,
-        userDataAction: (UserData) -> Unit
+        updateUserDataAction: (UserData) -> Unit
     ) {
-        if (disk == null)
+        if (disk == null || user == null) {
+            semaphores.release()
             return
-
+        }
         val updateIntervalSeconds = 0.1
         var transferredMb = 0.0
-        user.isFileUploading = true
-        userDataAction.invoke(user)
+        val fileSize = user.fileSize[0]
         disk.currentUser = user
+        disk.currentFileSize = fileSize
         disk.isBusy = true
 
-        while (transferredMb < user.fileSize) {
+        while (transferredMb < fileSize) {
             delay((updateIntervalSeconds * 1000).toLong())
             transferredMb += transferSpeedMbPerSecond * updateIntervalSeconds
             disk.transferredFileSize = transferredMb.toLong()
         }
 
         disk.currentUser = null
+        disk.currentFileSize = 0
         disk.isBusy = false
-        println(semaphores.availablePermits)
+        user.isFileUploading = false
+        updateUserDataAction.invoke(user)
         semaphores.release()
     }
 

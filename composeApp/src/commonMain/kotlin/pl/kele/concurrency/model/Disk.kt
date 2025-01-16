@@ -8,6 +8,7 @@ class Disk(
     var id: Int = 0,
     isBusy: Boolean = false,
     var currentUser: UserData? = null,
+    var currentFileSize: Long = 0,
     transferredFileSize: Long = 0
 ) {
 

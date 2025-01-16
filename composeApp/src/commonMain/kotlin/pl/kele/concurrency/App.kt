@@ -1,38 +1,32 @@
 package pl.kele.concurrency
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.consumeAsFlow
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import pl.kele.concurrency.model.UserData
 import pl.kele.concurrency.viewmodel.FileTransferViewModel
 import pl.kele.concurrency.viewmodel.UserDataViewModel
-import sun.tools.jconsole.LabeledComponent.layout
 import kotlin.random.Random
 
-const val fileSizeRangeStart = 10L
-const val fileSizeRangeEnd = 50_000L
+const val fileSizeRangeStart = 200L
+const val fileSizeRangeEnd = 3_000L
 
-const val fileTransferRangeStart = 10L
-const val fileTransferRangeEnd = 100L
+const val fileTransferRangeStart = 180L
+const val fileTransferRangeEnd = 200L
+
+const val numberOfFilesRangeStart = 1L
+const val numberOfFilesRangeEnd = 5L
 
 @Composable
 @Preview
@@ -42,13 +36,14 @@ fun App(
 ) {
     MaterialTheme {
 
-        var numberOfUsersToAdd by remember { mutableStateOf(TextFieldValue("1")) }
-
         val fileSizeStartRange by remember { mutableStateOf(fileSizeRangeStart..fileSizeRangeEnd) }
         var fileSizeRange by remember { mutableStateOf(fileSizeRangeStart..fileSizeRangeEnd) }
 
         val transferSizeStartRange by remember { mutableStateOf(fileTransferRangeStart..fileTransferRangeEnd) }
         var transferSizeRange by remember { mutableStateOf(fileTransferRangeStart..fileTransferRangeEnd) }
+
+        val numberOfFilesStartRange by remember { mutableStateOf(numberOfFilesRangeStart..numberOfFilesRangeEnd) }
+        var numberOfFilesRange by remember { mutableStateOf(numberOfFilesRangeStart..numberOfFilesRangeEnd) }
 
         val disksList = fileTransferViewModel.mDisksList.collectAsState()
 
@@ -76,7 +71,7 @@ fun App(
                         items(disksList.value) { disk ->
                             Column {
                                 Text("Disk ${disk.id}")
-                                Text("Current user data: ${disk.currentUser?.id} ${disk.currentUser?.userName} ${disk.currentUser?.fileSize}")
+                                Text("Current user data: ${disk.currentUser?.id} ${disk.currentFileSize}")
                                 Text("Data transfer progress = ${disk.transferredFileSize}")
                                 Text("Is data transfer in progress = ${disk.isBusy}")
                             }
@@ -108,17 +103,14 @@ fun App(
                         },
                         "File transfer size [MB/s]"
                     )
-//                    TextField(
-//                        value = numberOfUsersToAdd,
-//                        onValueChange = { value ->
-//                            if (value.text.all(Char::isDigit))
-//                                numberOfUsersToAdd = value
-//                        },
-//                        label = { Text("Number of users to add") },
-//                        keyboardOptions = KeyboardOptions(
-//                            keyboardType = KeyboardType.Number,
-//                        )
-//                    )
+                    SliderContent(
+                        numberOfFilesStartRange,
+                        numberOfFilesRange,
+                        onValueChange = { newRange ->
+                            numberOfFilesRange = newRange as LongRange
+                        },
+                        "Number of files"
+                    )
                 }
 
             }
@@ -129,7 +121,7 @@ fun App(
                     .fillMaxSize()
             ) {
                 val usersList = userDataViewModel.mUserDataList.collectAsState()
-                var fileSize by remember { mutableStateOf(0L) }
+                var fileSize by remember { mutableStateOf<List<Long>>(emptyList()) }
 
                 Row(
                     modifier = Modifier
@@ -144,9 +136,19 @@ fun App(
                             fileTransferViewModel.startFileTransfer(
                                 usersFlow = userDataViewModel.mUserDataList,
                                 transferSizeRange = transferSizeRange,
-                            ) { user ->
-                                userDataViewModel.removeUser(user)
-                            }
+                                userDataAction = { user ->
+                                    if (user?.fileSize?.isNotEmpty() == true) {
+                                        userDataViewModel.removeFile(user)
+                                        userDataViewModel.updateUsers()
+                                    }
+                                    else {
+                                        user?.let { userDataViewModel.removeUser(it) }
+                                    }
+                                },
+                                updateUserDataAction = { user ->
+                                    userDataViewModel.updateUser(user)
+                                }
+                            )
                         }) {
                             Text("Start simulation")
                         }
@@ -163,12 +165,14 @@ fun App(
                     Row {
                         Button(
                             onClick = {
-                                for (i in 0..<numberOfUsersToAdd.text.toInt()) {
-                                    fileSize = Random.nextLong(fileSizeRange.first, fileSizeRange.last + 1)
-                                    userDataViewModel.addUser(fileSize)
-                                    if (isSimulationRunning.value)
-                                        userDataViewModel.updateUsers()
+                                for (j in 0 ..< Random.nextLong(numberOfFilesRange.first, numberOfFilesRange.last + 1)) {
+                                    fileSize += Random.nextLong(fileSizeRange.first, fileSizeRange.last + 1)
                                 }
+                                fileSize = fileSize.sorted()
+                                userDataViewModel.addUser(fileSize)
+                                if (isSimulationRunning.value)
+                                    userDataViewModel.updateUsers()
+                                fileSize = emptyList()
                             }
                         ) {
                             Text("Add user(s)")
@@ -202,16 +206,36 @@ fun AddedContent(
     LazyColumn {
         item {
             Row(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxWidth()
+                    .padding(horizontal = 10.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("ID")
-                Text("USER")
-                Text("FILE SIZE")
-                Text("ENTRY TIME")
-                Text("TIME IN QUEUE")
-                Text("PRIORITY")
+                Text("ID",
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp))
+                Text("FILE SIZE",
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp))
+                Text("TIME IN QUEUE",
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp))
+                Text("PRIORITY",
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp))
+                Text("FILE TRANSFER",
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp))
             }
         }
         items(usersList) { user ->
@@ -227,23 +251,23 @@ fun AddedContent(
                     modifier = Modifier
                         .weight(0.2f)
                         .border(1.dp, Color.Black)
-                )
-                Text(user.userName,
-                    modifier = Modifier
-                        .weight(0.2f)
-                        .border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp)
                 )
                 Text("${user.fileSize}",
                     modifier = Modifier
                         .weight(0.2f)
                         .border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp)
                 )
-                Text(Utility.convertDate(user.entryTime, "dd-MM-yyyy HH:mm:ss"),
-                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black))
                 Text("${user.timeInQueue}",
-                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black))
+                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp))
                 Text("${user.priority}",
-                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black))
+                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp))
+                Text("${user.isFileUploading}",
+                    modifier = Modifier.weight(0.2f).border(1.dp, Color.Black)
+                        .padding(start = 6.dp, bottom = 2.dp))
             }
         }
     }

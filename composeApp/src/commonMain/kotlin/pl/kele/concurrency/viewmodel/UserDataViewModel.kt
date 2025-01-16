@@ -11,10 +11,8 @@ class UserDataViewModel : ViewModel() {
     private val _userDataList = MutableStateFlow<List<UserData>>(emptyList())
     val mUserDataList = _userDataList.asStateFlow()
 
-    fun addUser(fileSize: Long) {
+    fun addUser(fileSize: List<Long>) {
         val user = UserData(
-            id = (_userDataList.value.size + 1),
-            userName = "User ${_userDataList.value.size + 1}",
             fileSize = fileSize,
             entryTime = System.currentTimeMillis(),
             timeInQueue = 0,
@@ -30,20 +28,52 @@ class UserDataViewModel : ViewModel() {
                 timeInQueue = user.updateTimeInQueue(),
                 priority = user.updatePriority(_userDataList.value.size)
             )
-        }.sortedByDescending { it.priority }
+        }.sortedByDescending { it.priority  }.sortedByDescending { !it.isFileUploading }
+
+
+        _userDataList.value = emptyList()
+        _userDataList.value = newList
+    }
+
+    fun updateUser(user: UserData) {
+        val newList = _userDataList.value.map { u ->
+            if (u.id == user.id) {
+                u.copy(
+                    isFileUploading = user.isFileUploading,
+                )
+            } else {
+                u.copy()
+            }
+        }.sortedByDescending { it.priority }.sortedByDescending { !it.isFileUploading }
         _userDataList.value = emptyList()
         _userDataList.value = newList
     }
 
     fun removeUsers() {
         _userDataList.value = emptyList()
+        UserData.index = 0
+    }
+
+    fun removeFile(user: UserData) {
+        user.fileSize = user.fileSize.drop(1)
+        val newList = _userDataList.value.map { u ->
+            if (u.id == user.id) {
+                u.copy(fileSize = user.fileSize, isFileUploading = user.isFileUploading)
+            } else
+                u
+        }
+        _userDataList.value = emptyList()
+        _userDataList.value = newList
+        if (user.fileSize.isEmpty()) {
+            removeUser(user)
+        }
     }
 
     fun removeUser(user: UserData) {
-        println("toDelete = $user")
         _userDataList.update { userList ->
-            userList.filter { u -> u.id != user.id }
+            userList.filter { u ->
+                u.id != user.id
+            }
         }
-//        _userDataList.value -= user
     }
 }
