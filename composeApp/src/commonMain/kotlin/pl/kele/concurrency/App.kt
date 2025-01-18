@@ -71,7 +71,8 @@ fun App(
                         items(disksList.value) { disk ->
                             Column {
                                 Text("Disk ${disk.id}")
-                                Text("User ID: ${disk.currentUser?.id} User file size: ${disk.currentFileSize}")
+                                Text("User ID: ${disk.currentUser?.id ?: "Empty"}")
+                                Text("User file size: ${disk.currentFileSize}")
                                 Text("Data transfer progress: ${disk.transferredFileSize}")
                             }
                             Spacer(modifier = Modifier.width(20.dp))
@@ -150,14 +151,6 @@ fun App(
                             )
                         }) {
                             Text("Start simulation")
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Button(onClick = {
-                            fileTransferViewModel.cancelFileTransfer()
-                        }) {
-                            Text("Stop simulation")
                         }
                     }
 
